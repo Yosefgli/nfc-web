@@ -3,29 +3,40 @@ document.getElementById('startNFC').addEventListener('click', async () => {
         try {
             const nfcReader = new NDEFReader();
             await nfcReader.scan();
-            console.log("✅ NFC הופעל, מוכן לקריאה");
+            document.body.insertAdjacentHTML("beforeend", "<p>✅ NFC הופעל, מוכן לקריאה</p>");
 
             nfcReader.onreading = event => {
-                console.log("📡 קריאה התקבלה מה-NFC");
-                const decoder = new TextDecoder();
+                document.body.insertAdjacentHTML("beforeend", "<p>📡 קריאה התקבלה מה-NFC!</p>");
                 
                 for (const record of event.message.records) {
-                    let scannedCode = decoder.decode(record.data);
-                    console.log(`🔍 קוד שנסרק: ${scannedCode}`);
+                    let scannedData;
                     
-                    // ניקוי תווים ריקים והסרת רווחים מיותרים
-                    scannedCode = scannedCode.trim();
+                    if (record.data instanceof ArrayBuffer) {
+                        scannedData = arrayBufferToHex(record.data); // המרה לפורמט Hex
+                    } else {
+                        scannedData = new TextDecoder().decode(record.data);
+                    }
+
+                    scannedData = scannedData.trim();
+                    document.body.insertAdjacentHTML("beforeend", `<p>🔍 קוד שנסרק: ${scannedData}</p>`);
                     
-                    checkNFC(scannedCode);
+                    checkNFC(scannedData);
                 }
             };
         } catch (error) {
-            console.error("❌ שגיאה בהפעלת NFC:", error);
+            document.body.insertAdjacentHTML("beforeend", `<p>❌ שגיאה: ${error.message}</p>`);
         }
     } else {
         alert("⚠️ הדפדפן שלך לא תומך ב-NFC Web API");
     }
 });
+
+// פונקציה להמרת ArrayBuffer למחרוזת Hex
+function arrayBufferToHex(buffer) {
+    return [...new Uint8Array(buffer)]
+        .map(b => b.toString(16).padStart(2, "0"))
+        .join(":");
+}
 
 function checkNFC(scannedCode) {
     let boxes = document.querySelectorAll('.box');
@@ -45,7 +56,7 @@ function checkNFC(scannedCode) {
     });
 
     if (!foundMatch) {
-        console.warn("⚠️ אין התאמה לקוד שנקלט!");
+        document.body.insertAdjacentHTML("beforeend", "<p>⚠️ אין התאמה לקוד שנקלט!</p>");
     }
 
     if (allGreen) {
