@@ -7,22 +7,22 @@ document.getElementById('startNFC').addEventListener('click', async () => {
 
             nfcReader.onreading = event => {
                 document.body.insertAdjacentHTML("beforeend", "<p>📡 קריאה התקבלה מה-NFC!</p>");
-                
-                for (const record of event.message.records) {
-                    let scannedData;
 
-                    // ניסיון פענוח חכם לפי סוג הנתונים
-                    if (record.data && record.data instanceof ArrayBuffer) {
+                for (const record of event.message.records) {
+                    let scannedData = "❌ נתונים לא מזוהים"; // ערך ברירת מחדל
+
+                    // בדיקת סוג הנתונים
+                    if ('data' in record && record.data instanceof ArrayBuffer) {
                         scannedData = arrayBufferToHex(record.data); // המרה ל-Hex
                     } else if (record.recordType === "text") {
-                        scannedData = textDecoder(record); // קריאה תקינה
-                    } else {
-                        scannedData = "❌ נתונים לא מזוהים";
+                        scannedData = decodeTextRecord(record);
+                    } else if ('data' in record) {
+                        scannedData = JSON.stringify(record.data); // הדפסת הנתונים בצורה גולמית אם לא מזוהים
                     }
 
                     scannedData = scannedData.trim();
                     document.body.insertAdjacentHTML("beforeend", `<p>🔍 קוד שנסרק: ${scannedData}</p>`);
-                    
+
                     checkNFC(scannedData);
                 }
             };
@@ -34,15 +34,15 @@ document.getElementById('startNFC').addEventListener('click', async () => {
     }
 });
 
-// פונקציה להמרת ArrayBuffer ל-Hexadecimal
+// המרת ArrayBuffer ל-Hexadecimal
 function arrayBufferToHex(buffer) {
     return [...new Uint8Array(buffer)]
         .map(b => b.toString(16).padStart(2, "0"))
         .join(":");
 }
 
-// פונקציה לקריאת טקסט אם הפורמט נתמך
-function textDecoder(record) {
+// קריאת טקסט אם הפורמט נתמך
+function decodeTextRecord(record) {
     try {
         const decoder = new TextDecoder("utf-8");
         return decoder.decode(record.data);
@@ -51,7 +51,7 @@ function textDecoder(record) {
     }
 }
 
-// פונקציה לבדיקת קוד NFC מול הרשימה
+// בדיקה אם הקוד מתאים לריבועים
 function checkNFC(scannedCode) {
     let boxes = document.querySelectorAll('.box');
     let allGreen = true;
@@ -59,7 +59,7 @@ function checkNFC(scannedCode) {
 
     boxes.forEach(box => {
         console.log(`📍 בודק מול: ${box.dataset.nfc}`);
-        
+
         if (box.dataset.nfc.toLowerCase() === scannedCode.toLowerCase()) {
             box.style.backgroundColor = 'green';
             foundMatch = true;
@@ -81,7 +81,7 @@ function checkNFC(scannedCode) {
 // שליחת וובהוק לאחר שכל הריבועים ירוקים
 function sendWebhook() {
     const webhookURL = "https://hook.integrator.boost.space/6596she29xov3falmux3q83qemwkb1tl";
-    
+
     fetch(webhookURL, {
         method: "POST",
         headers: {
