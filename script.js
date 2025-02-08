@@ -5,7 +5,8 @@ document.getElementById('startNFC').addEventListener('click', async () => {
             await nfcReader.scan();
 
             nfcReader.onreading = event => {
-                let scannedUID = event.serialNumber;
+                event.preventDefault(); // מוודא שלא מוצגות הודעות מערכת
+                let scannedUID = event.serialNumber.trim(); // מנקה רווחים מיותרים
                 checkNFC(scannedUID);
             };
         } catch (error) {
