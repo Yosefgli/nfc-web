@@ -5,8 +5,8 @@ document.getElementById('startNFC').addEventListener('click', async () => {
             await nfcReader.scan();
 
             nfcReader.onreading = event => {
-                event.preventDefault(); // מוודא שלא מוצגות הודעות מערכת
-                let scannedUID = event.serialNumber.trim(); // מנקה רווחים מיותרים
+                event.preventDefault(); // מונע הודעות מערכת מיותרות
+                let scannedUID = event.serialNumber.trim(); // ניקוי רווחים מיותרים
                 checkNFC(scannedUID);
             };
         } catch (error) {
@@ -17,10 +17,9 @@ document.getElementById('startNFC').addEventListener('click', async () => {
     }
 });
 
-// בדיקה אם הקוד מתאים לריבועים
+// בדיקה אם ה-UID מתאים לאחד הריבועים
 function checkNFC(scannedCode) {
     let boxes = document.querySelectorAll('.box');
-    let allGreen = true;
     let foundMatch = false;
 
     boxes.forEach(box => {
@@ -28,18 +27,32 @@ function checkNFC(scannedCode) {
             box.style.backgroundColor = 'green';
             foundMatch = true;
         }
-        if (box.style.backgroundColor !== 'green') {
-            allGreen = false;
-        }
     });
 
-    if (allGreen) {
-        sendWebhook();
+    if (!foundMatch) {
+        console.log("⚠️ אין התאמה לקוד שנקלט!");
     }
 }
 
-// שליחת וובהוק לאחר שכל הריבועים ירוקים
-function sendWebhook() {
+// מאזין לכפתור "שלח וובהוק"
+document.getElementById('sendWebhook').addEventListener('click', () => {
+    let greenBoxes = [];
+
+    document.querySelectorAll('.box').forEach(box => {
+        if (box.style.backgroundColor === 'green') {
+            greenBoxes.push(box.textContent.trim()); // הוספת שם הריבוע שצבוע בירוק
+        }
+    });
+
+    if (greenBoxes.length > 0) {
+        sendWebhook(greenBoxes);
+    } else {
+        alert("⚠️ אין ריבועים צבועים בירוק!");
+    }
+});
+
+// שליחת וובהוק עם שמות הריבועים שצבועים בירוק
+function sendWebhook(greenBoxes) {
     const webhookURL = "https://hook.integrator.boost.space/6596she29xov3falmux3q83qemwkb1tl";
 
     fetch(webhookURL, {
@@ -47,7 +60,7 @@ function sendWebhook() {
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({ message: "✅ כל הריבועים ירוקים! אישור התקבל." })
+        body: JSON.stringify({ greenBoxes: greenBoxes })
     })
     .then(response => response.json())
     .then(data => console.log("🚀 וובהוק נשלח בהצלחה:", data))
