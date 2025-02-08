@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NFC זיהוי</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>מערכת זיהוי NFC</h1>
+    <p>קרב את הכרטיס כדי לאשר את המיקום</p>
+    
+    <div class="container">
+        <div class="box" id="hall" data-nfc="123456">אולם</div>
+        <div class="box" id="kitchen" data-nfc="654321">מטבח</div>
+        <div class="box" id="container" data-nfc="789123">קונטיינר</div>
+        <div class="box" id="house" data-nfc="321987">בית</div>
+    </div>
+
+    <button id="startNFC">הפעל NFC</button>
+
+    <script src="script.js"></script>
+</body>
+</html>
