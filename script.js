@@ -8,23 +8,11 @@ document.getElementById('startNFC').addEventListener('click', async () => {
             nfcReader.onreading = event => {
                 document.body.insertAdjacentHTML("beforeend", "<p>📡 קריאה התקבלה מה-NFC!</p>");
 
-                for (const record of event.message.records) {
-                    let scannedData = "❌ נתונים לא מזוהים"; // ערך ברירת מחדל
+                // קריאת המספר הסידורי של הכרטיס (UID)
+                let scannedUID = event.serialNumber;
+                document.body.insertAdjacentHTML("beforeend", `<p>🔍 מספר סידורי: ${scannedUID}</p>`);
 
-                    // בדיקת סוג הנתונים
-                    if ('data' in record && record.data instanceof ArrayBuffer) {
-                        scannedData = arrayBufferToHex(record.data); // המרה ל-Hex
-                    } else if (record.recordType === "text") {
-                        scannedData = decodeTextRecord(record);
-                    } else if ('data' in record) {
-                        scannedData = JSON.stringify(record.data); // הדפסת הנתונים בצורה גולמית אם לא מזוהים
-                    }
-
-                    scannedData = scannedData.trim();
-                    document.body.insertAdjacentHTML("beforeend", `<p>🔍 קוד שנסרק: ${scannedData}</p>`);
-
-                    checkNFC(scannedData);
-                }
+                checkNFC(scannedUID);
             };
         } catch (error) {
             document.body.insertAdjacentHTML("beforeend", `<p>❌ שגיאה: ${error.message}</p>`);
@@ -33,23 +21,6 @@ document.getElementById('startNFC').addEventListener('click', async () => {
         alert("⚠️ הדפדפן שלך לא תומך ב-NFC Web API");
     }
 });
-
-// המרת ArrayBuffer ל-Hexadecimal
-function arrayBufferToHex(buffer) {
-    return [...new Uint8Array(buffer)]
-        .map(b => b.toString(16).padStart(2, "0"))
-        .join(":");
-}
-
-// קריאת טקסט אם הפורמט נתמך
-function decodeTextRecord(record) {
-    try {
-        const decoder = new TextDecoder("utf-8");
-        return decoder.decode(record.data);
-    } catch {
-        return "❌ שגיאה בפענוח טקסט";
-    }
-}
 
 // בדיקה אם הקוד מתאים לריבועים
 function checkNFC(scannedCode) {
