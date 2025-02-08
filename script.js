@@ -3,36 +3,50 @@ document.getElementById('startNFC').addEventListener('click', async () => {
         try {
             const nfcReader = new NDEFReader();
             await nfcReader.scan();
-            console.log("NFC מוכן לקריאה");
+            console.log("✅ NFC הופעל, מוכן לקריאה");
 
             nfcReader.onreading = event => {
+                console.log("📡 קריאה התקבלה מה-NFC");
                 const decoder = new TextDecoder();
+                
                 for (const record of event.message.records) {
-                    const scannedCode = decoder.decode(record.data);
-                    console.log(`זיהוי קוד: ${scannedCode}`);
+                    let scannedCode = decoder.decode(record.data);
+                    console.log(`🔍 קוד שנסרק: ${scannedCode}`);
+                    
+                    // ניקוי תווים ריקים והסרת רווחים מיותרים
+                    scannedCode = scannedCode.trim();
+                    
                     checkNFC(scannedCode);
                 }
             };
         } catch (error) {
-            console.error("שגיאה בהפעלת NFC:", error);
+            console.error("❌ שגיאה בהפעלת NFC:", error);
         }
     } else {
-        alert("הדפדפן שלך לא תומך ב-NFC Web API");
+        alert("⚠️ הדפדפן שלך לא תומך ב-NFC Web API");
     }
 });
 
 function checkNFC(scannedCode) {
     let boxes = document.querySelectorAll('.box');
     let allGreen = true;
+    let foundMatch = false;
 
     boxes.forEach(box => {
-        if (box.dataset.nfc === scannedCode) {
+        console.log(`📍 בודק מול: ${box.dataset.nfc}`);
+        
+        if (box.dataset.nfc.toLowerCase() === scannedCode.toLowerCase()) {
             box.style.backgroundColor = 'green';
+            foundMatch = true;
         }
         if (box.style.backgroundColor !== 'green') {
             allGreen = false;
         }
     });
+
+    if (!foundMatch) {
+        console.warn("⚠️ אין התאמה לקוד שנקלט!");
+    }
 
     if (allGreen) {
         sendWebhook();
@@ -47,9 +61,9 @@ function sendWebhook() {
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({ message: "כל הריבועים ירוקים! אישור התקבל." })
+        body: JSON.stringify({ message: "✅ כל הריבועים ירוקים! אישור התקבל." })
     })
     .then(response => response.json())
-    .then(data => console.log("וובהוק נשלח בהצלחה:", data))
-    .catch(error => console.error("שגיאה בשליחת הוובהוק:", error));
+    .then(data => console.log("🚀 וובהוק נשלח בהצלחה:", data))
+    .catch(error => console.error("❌ שגיאה בשליחת הוובהוק:", error));
 }
