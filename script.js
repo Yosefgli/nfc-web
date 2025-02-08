@@ -11,15 +11,16 @@ document.getElementById('startNFC').addEventListener('click', async () => {
                 for (const record of event.message.records) {
                     let scannedData;
 
-                    // בדיקת סוג הנתונים לפני ניסיון פענוח
-                    if (record.data instanceof ArrayBuffer) {
+                    // ניסיון פענוח חכם לפי סוג הנתונים
+                    if (record.data && record.data instanceof ArrayBuffer) {
                         scannedData = arrayBufferToHex(record.data); // המרה ל-Hex
-                    } else if (typeof record.data === "string") {
-                        scannedData = record.data.trim();
+                    } else if (record.recordType === "text") {
+                        scannedData = textDecoder(record); // קריאה תקינה
                     } else {
                         scannedData = "❌ נתונים לא מזוהים";
                     }
 
+                    scannedData = scannedData.trim();
                     document.body.insertAdjacentHTML("beforeend", `<p>🔍 קוד שנסרק: ${scannedData}</p>`);
                     
                     checkNFC(scannedData);
@@ -33,13 +34,24 @@ document.getElementById('startNFC').addEventListener('click', async () => {
     }
 });
 
-// פונקציה להמרת ArrayBuffer למחרוזת Hex
+// פונקציה להמרת ArrayBuffer ל-Hexadecimal
 function arrayBufferToHex(buffer) {
     return [...new Uint8Array(buffer)]
         .map(b => b.toString(16).padStart(2, "0"))
         .join(":");
 }
 
+// פונקציה לקריאת טקסט אם הפורמט נתמך
+function textDecoder(record) {
+    try {
+        const decoder = new TextDecoder("utf-8");
+        return decoder.decode(record.data);
+    } catch {
+        return "❌ שגיאה בפענוח טקסט";
+    }
+}
+
+// פונקציה לבדיקת קוד NFC מול הרשימה
 function checkNFC(scannedCode) {
     let boxes = document.querySelectorAll('.box');
     let allGreen = true;
@@ -66,6 +78,7 @@ function checkNFC(scannedCode) {
     }
 }
 
+// שליחת וובהוק לאחר שכל הריבועים ירוקים
 function sendWebhook() {
     const webhookURL = "https://hook.integrator.boost.space/6596she29xov3falmux3q83qemwkb1tl";
     
