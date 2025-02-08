@@ -3,19 +3,13 @@ document.getElementById('startNFC').addEventListener('click', async () => {
         try {
             const nfcReader = new NDEFReader();
             await nfcReader.scan();
-            document.body.insertAdjacentHTML("beforeend", "<p>✅ NFC הופעל, מוכן לקריאה</p>");
 
             nfcReader.onreading = event => {
-                document.body.insertAdjacentHTML("beforeend", "<p>📡 קריאה התקבלה מה-NFC!</p>");
-
-                // קריאת המספר הסידורי של הכרטיס (UID)
                 let scannedUID = event.serialNumber;
-                document.body.insertAdjacentHTML("beforeend", `<p>🔍 מספר סידורי: ${scannedUID}</p>`);
-
                 checkNFC(scannedUID);
             };
         } catch (error) {
-            document.body.insertAdjacentHTML("beforeend", `<p>❌ שגיאה: ${error.message}</p>`);
+            console.error("❌ שגיאה:", error.message);
         }
     } else {
         alert("⚠️ הדפדפן שלך לא תומך ב-NFC Web API");
@@ -29,8 +23,6 @@ function checkNFC(scannedCode) {
     let foundMatch = false;
 
     boxes.forEach(box => {
-        console.log(`📍 בודק מול: ${box.dataset.nfc}`);
-
         if (box.dataset.nfc.toLowerCase() === scannedCode.toLowerCase()) {
             box.style.backgroundColor = 'green';
             foundMatch = true;
@@ -39,10 +31,6 @@ function checkNFC(scannedCode) {
             allGreen = false;
         }
     });
-
-    if (!foundMatch) {
-        document.body.insertAdjacentHTML("beforeend", "<p>⚠️ אין התאמה לקוד שנקלט!</p>");
-    }
 
     if (allGreen) {
         sendWebhook();
