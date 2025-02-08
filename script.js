@@ -10,14 +10,16 @@ document.getElementById('startNFC').addEventListener('click', async () => {
                 
                 for (const record of event.message.records) {
                     let scannedData;
-                    
+
+                    // בדיקת סוג הנתונים לפני ניסיון פענוח
                     if (record.data instanceof ArrayBuffer) {
-                        scannedData = arrayBufferToHex(record.data); // המרה לפורמט Hex
+                        scannedData = arrayBufferToHex(record.data); // המרה ל-Hex
+                    } else if (typeof record.data === "string") {
+                        scannedData = record.data.trim();
                     } else {
-                        scannedData = new TextDecoder().decode(record.data);
+                        scannedData = "❌ נתונים לא מזוהים";
                     }
 
-                    scannedData = scannedData.trim();
                     document.body.insertAdjacentHTML("beforeend", `<p>🔍 קוד שנסרק: ${scannedData}</p>`);
                     
                     checkNFC(scannedData);
